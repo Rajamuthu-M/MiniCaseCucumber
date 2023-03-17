@@ -24,7 +24,7 @@ import io.github.bonigarcia.wdm.WebDriverManager;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
 public class DemoBlazeDef {
 	static WebDriver driver;
-	String verify;
+	String check,priceBefore,priceAfter;
 	
 	@BeforeAll
 	public static void setup() {
@@ -32,11 +32,11 @@ public class DemoBlazeDef {
 		driver = new EdgeDriver();
 		driver.manage().window().maximize();
 		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(20));
-		driver.get("https://www.demoblaze.com/");
 	}
 	
 	@Given("User is on Launch Page")
 	public void user_is_on_launch_page() {
+		driver.get("https://www.demoblaze.com/");
 		driver.findElement(By.xpath("//a[text()='Home ']")).click();
 	}
 
@@ -67,43 +67,38 @@ public class DemoBlazeDef {
 		wait.until(ExpectedConditions.alertIsPresent());
 		Alert alert = driver.switchTo().alert();
 		alert.accept();
-		verify = itemName;
+		check = itemName;
 		
 	}
 	
 	@Then("Items must be added to cart")
 	public void items_must_be_added_to_cart() {
 		driver.findElement(By.xpath("//a[text()='Cart']")).click();
-		List<WebElement> cartList = driver.findElements(By.xpath("//td[2]"));
+		List<WebElement> itemsInCart = driver.findElements(By.xpath("//td[2]"));
 		boolean flag=false;
-		for(WebElement list:cartList) {
-			if(list.getText().equalsIgnoreCase(verify)) {
-				Assert.assertEquals(list.getText(), verify);
+		for(WebElement list:itemsInCart) {
+			if(list.getText().equalsIgnoreCase(check)) {
+				Assert.assertEquals(list.getText(), check);
 				flag=true;
-				Assert.assertTrue(flag);
 			}
 		}
+		Assert.assertTrue(flag);
 	}
 
 	@When("Delete an item from cart")
 	public void delete_an_item_from_cart() throws InterruptedException {
 		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
 		driver.findElement(By.xpath("//a[text()='Cart']")).click();
-    	String priceBefore =driver.findElement(By.id("totalp")).getText();
-    	System.out.println(priceBefore);
+        priceBefore =driver.findElement(By.id("totalp")).getText();
+        Thread.sleep(1000);
     	wait.until(ExpectedConditions.elementToBeClickable(driver.findElement(By.xpath("//a[contains(text(),'Delete')][1]")))).click();
-		String priceAfter =driver.findElement(By.id("totalp")).getText();
-    	System.out.println(priceAfter);
-    	
-    	if(priceBefore==priceAfter)
-    		System.out.println("Item not deleted");
-    	else
-    		System.out.println("Item deleted");
+    	Thread.sleep(1000);
+		priceAfter =driver.findElement(By.id("totalp")).getText();
 	}
 
 	@Then("Items should be deleted in cart")
 	public void items_should_be_deleted_in_cart() {
-		Assert.assertNotEquals("priceBefore", "priceAfter");
+		Assert.assertNotEquals(priceBefore, priceAfter);
 	}
 
 	@When("Place Order")
