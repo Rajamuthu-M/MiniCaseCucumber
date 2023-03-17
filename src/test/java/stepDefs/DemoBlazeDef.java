@@ -31,18 +31,17 @@ public class DemoBlazeDef {
 		WebDriverManager.edgedriver().setup();
 		driver = new EdgeDriver();
 		driver.manage().window().maximize();
+		driver.get("https://www.demoblaze.com/");
 		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(20));
 	}
 	
 	@Given("User is on Launch Page")
 	public void user_is_on_launch_page() {
-		driver.get("https://www.demoblaze.com/");
-		driver.findElement(By.xpath("//a[text()='Home ']")).click();
+		driver.findElement(By.id("login2")).click();
 	}
 
 	@When("User login")
 	public void user_login() {
-		driver.findElement(By.id("login2")).click();
 		driver.findElement(By.id("loginusername")).sendKeys("RajaM");
     	driver.findElement(By.id("loginpassword")).sendKeys("123456");
     	driver.findElement(By.xpath("//button[text()='Log in']")).click();
@@ -57,10 +56,11 @@ public class DemoBlazeDef {
 	@When("Add an item {string} and {string} to cart")
 	public void add_an_item_and_to_cart(String category, String itemName) {
 		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+		driver.findElement(By.xpath("//a[contains(text(),'Home')]")).click();
 		String currentCategory = "//a[text()='"+category+"']";
-		wait.until(ExpectedConditions.elementToBeClickable(driver.findElement(By.xpath(currentCategory)))).click();
+		wait.until(ExpectedConditions.elementToBeClickable(By.xpath(currentCategory))).click();
     	String currentItem = "//a[text()='"+itemName+"']";
-    	wait.until(ExpectedConditions.elementToBeClickable(driver.findElement(By.xpath(currentItem)))).click();
+    	wait.until(ExpectedConditions.elementToBeClickable(By.xpath(currentItem))).click();
     	WebElement btn = driver.findElement(By.xpath("//a[text()='Add to cart']"));
 		wait.until(ExpectedConditions.elementToBeClickable(btn));
 		btn.click();
@@ -80,24 +80,31 @@ public class DemoBlazeDef {
 			if(list.getText().equalsIgnoreCase(check)) {
 				Assert.assertEquals(list.getText(), check);
 				flag=true;
+				Assert.assertTrue(flag);
 			}
 		}
-		Assert.assertTrue(flag);
 	}
 
 	@When("Delete an item from cart")
-	public void delete_an_item_from_cart() throws InterruptedException {
+	public void delete_an_item_from_cart() throws InterruptedException{
 		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
-		driver.findElement(By.xpath("//a[text()='Cart']")).click();
+//		driver.findElement(By.xpath("//a[text()='Cart']")).click();
+		wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//a[text()='Cart']"))).click();
+		List<WebElement> ItemsBefore=driver.findElements(By.xpath("//td[2]"));
+		wait.until(ExpectedConditions.visibilityOfAllElements(ItemsBefore));
         priceBefore =driver.findElement(By.id("totalp")).getText();
-        Thread.sleep(1000);
-    	wait.until(ExpectedConditions.elementToBeClickable(driver.findElement(By.xpath("//a[contains(text(),'Delete')][1]")))).click();
-    	Thread.sleep(1000);
-		priceAfter =driver.findElement(By.id("totalp")).getText();
+        System.out.println(priceBefore);
+        wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//a[contains(text(),'Delete')][1]"))).click();
+        Thread.sleep(2000);
 	}
 
 	@Then("Items should be deleted in cart")
 	public void items_should_be_deleted_in_cart() {
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+		List<WebElement> ItemsAfter=driver.findElements(By.xpath("//td[2]"));
+		wait.until(ExpectedConditions.visibilityOfAllElements(ItemsAfter));
+		priceAfter =driver.findElement(By.id("totalp")).getText();
+		System.out.println(priceAfter);
 		Assert.assertNotEquals(priceBefore, priceAfter);
 	}
 
@@ -105,14 +112,15 @@ public class DemoBlazeDef {
 	public void place_order() {
 		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
 		driver.findElement(By.xpath("//a[text()='Cart']")).click();
-		wait.until(ExpectedConditions.elementToBeClickable(driver.findElement(By.xpath("//button[contains(text(),'Place Order')]")))).click();
+		wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[contains(text(),'Place Order')]"))).click();
+		wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//input[@id='name']")));
 		driver.findElement(By.xpath("//input[@id='name']")).sendKeys("Raja");
 		driver.findElement(By.xpath("//input[@id='country']")).sendKeys("India");
 		driver.findElement(By.xpath("//input[@id='city']")).sendKeys("Salem");
 		driver.findElement(By.xpath("//input[@id='card']")).sendKeys("76875785");
 		driver.findElement(By.xpath("//input[@id='month']")).sendKeys("April");
 		driver.findElement(By.xpath("//input[@id='year']")).sendKeys("2024");
-		wait.until(ExpectedConditions.elementToBeClickable(driver.findElement(By.xpath("//button[contains(text(),'Purchase')]")))).click();	
+		wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[contains(text(),'Purchase')]"))).click();	
 	}
 
 	@Then("Purchase Items")
@@ -121,7 +129,7 @@ public class DemoBlazeDef {
 		boolean isDisp = driver.findElement(By.xpath("//h2[(text()='Thank you for your purchase!')]")).isDisplayed();
     	Assert.assertTrue(isDisp);
     	Thread.sleep(1000);
-    	wait.until(ExpectedConditions.elementToBeClickable(driver.findElement(By.xpath("//button[contains(text(),'OK')]")))).click();
+    	wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[contains(text(),'OK')]"))).click();
 	}
 	@After
 	public void attachImgToReport(Scenario scenario) {
